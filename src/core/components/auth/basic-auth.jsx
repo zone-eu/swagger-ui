@@ -1,4 +1,5 @@
-import React, { PropTypes } from "react"
+import React from "react"
+import PropTypes from "prop-types"
 import ImPropTypes from "react-immutable-proptypes"
 
 export default class BasicAuth extends React.Component {
@@ -59,23 +60,26 @@ export default class BasicAuth extends React.Component {
         <h4>Basic authorization<JumpToPath path={[ "securityDefinitions", name ]} /></h4>
         { username && <h6>Authorized</h6> }
         <Row>
-          <Markdown options={{html: true, typographer: true, linkify: true, linkTarget: "_blank"}}
-                    source={ schema.get("description") } />
+          <Markdown source={ schema.get("description") } />
         </Row>
         <Row>
-          <Col tablet={2} desktop={2}>username:</Col>
-          <Col tablet={10} desktop={10}>
-            {
-              username || <Input type="text" required="required" name="username" onChange={ this.onChange }/>
-            }
-          </Col>
+          <label>Username:</label>
+          {
+            username ? <code> { username } </code>
+                     : <Col><Input type="text" required="required" name="username" onChange={ this.onChange }/></Col>
+          }
         </Row>
-        {
-          !username && <Row>
-            <Col tablet={2} desktop={2}>password:</Col>
-            <Col tablet={10} desktop={10}><Input required="required" autoComplete="new-password" name="password" type="password" onChange={ this.onChange }/></Col>
-          </Row>
-        }
+        <Row>
+          <label>Password:</label>
+            {
+              username ? <code> ****** </code>
+                       : <Col><Input required="required"
+                                     autoComplete="new-password"
+                                     name="password"
+                                     type="password"
+                                     onChange={ this.onChange }/></Col>
+            }
+        </Row>
         {
           errors.valueSeq().map( (error, key) => {
             return <AuthError error={ error }

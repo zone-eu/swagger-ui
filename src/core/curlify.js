@@ -1,10 +1,12 @@
+import win from "./window"
+
 export default function curl( request ){
   let curlified = []
   let type = ""
   let headers = request.get("headers")
   curlified.push( "curl" )
   curlified.push( "-X", request.get("method") )
-  curlified.push( request.get("url") )
+  curlified.push( `"${request.get("url")}"`)
 
   if ( headers && headers.size ) {
     for( let p of request.get("headers").entries() ){
@@ -18,11 +20,13 @@ export default function curl( request ){
   if ( request.get("body") ){
 
     if(type === "multipart/form-data" && request.get("method") === "POST") {
-      let formDataBody = request.get("body").split("&")
-
-      for(var data in formDataBody) {
+      for( let [ k,v ] of request.get("body").entrySeq()) {
         curlified.push( "-F" )
-        curlified.push(formDataBody[data])
+        if (v instanceof win.File) {
+          curlified.push( `"${k}=@${v.name};type=${v.type}"` )
+        } else {
+          curlified.push( `"${k}=${v}"` )
+        }
       }
     } else {
       curlified.push( "-d" )

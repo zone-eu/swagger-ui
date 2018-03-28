@@ -1,11 +1,12 @@
 import { fromJS, Map } from "immutable"
-import btoa from "btoa"
+import { btoa } from "core/utils"
 
 import {
   SHOW_AUTH_POPUP,
   AUTHORIZE,
   AUTHORIZE_OAUTH2,
-  LOGOUT
+  LOGOUT,
+  CONFIGURE_AUTH
 } from "./actions"
 
 export default {
@@ -21,7 +22,7 @@ export default {
     securities.entrySeq().forEach( ([ key, security ]) => {
       let type = security.getIn(["schema", "type"])
 
-      if ( type === "apiKey" ) {
+      if ( type === "apiKey" || type === "http" ) {
         map = map.set(key, security)
       } else if ( type === "basic" ) {
         let username = security.getIn(["value", "username"])
@@ -43,7 +44,7 @@ export default {
     let { auth, token } = payload
     let parsedAuth
 
-    auth.token = token
+    auth.token = Object.assign({}, token)
     parsedAuth = fromJS(auth)
 
     return state.setIn( [ "authorized", parsedAuth.get("name") ], parsedAuth )
@@ -57,5 +58,9 @@ export default {
       })
 
     return state.set("authorized", result)
+  },
+
+  [CONFIGURE_AUTH]: (state, { payload } ) =>{
+    return state.set("configs", payload)
   }
 }

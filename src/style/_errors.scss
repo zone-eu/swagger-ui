@@ -24,6 +24,11 @@
 
             @include text_code();
         }
+
+        small
+        {
+          color: $errors-wrapper-errors-small-font-color;
+        }
     }
 
     hgroup

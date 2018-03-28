@@ -20,8 +20,14 @@ const RootWrapper = (reduxStore, ComponentToWrap) => class extends Component {
 }
 
 const makeContainer = (getSystem, component, reduxStore) => {
+  const mapStateToProps = function(state, ownProps) {
+    const propsForContainerComponent = Object.assign({}, ownProps, getSystem())
+    const ori = component.prototype.mapStateToProps || (state => { return {state} })
+    return ori(state, propsForContainerComponent)
+  }
+
   let wrappedWithSystem = SystemWrapper(getSystem, component, reduxStore)
-  let connected = connect(state => ({state}))(wrappedWithSystem)
+  let connected = connect( mapStateToProps )(wrappedWithSystem)
   if(reduxStore)
     return RootWrapper(reduxStore, connected)
   return connected
@@ -58,23 +64,22 @@ export const makeMappedContainer = (getSystem, getStore, memGetComponent, getCom
 
 }
 
-export const render = (getSystem, getStore, getComponent, getComponents, dom) => {
-  let domNode = document.querySelector(dom)
+export const render = (getSystem, getStore, getComponent, getComponents, domNode) => {
   let App = (getComponent(getSystem, getStore, getComponents, "App", "root"))
   ReactDOM.render(( <App/> ), domNode)
 }
 
 // Render try/catch wrapper
-const createClass = component => React.createClass({
+const createClass = component => class extends Component {
   render() {
     return component(this.props)
   }
-})
+}
 
 const Fallback = ({ name }) => <div style={{ // eslint-disable-line react/prop-types
     padding: "1em",
     "color": "#aaa"
-  }}>😱 <i>Could not render { name || name === "t" ? name : "this component" }, see the console.</i></div>
+  }}>😱 <i>Could not render { name === "t" ? "this component" : name }, see the console.</i></div>
 
 const wrapRender = (component) => {
   const isStateless = component => !(component.prototype && component.prototype.isReactComponent)
@@ -115,5 +120,5 @@ export const getComponent = (getSystem, getStore, getComponents, componentName, 
     return makeContainer(getSystem, component, getStore())
 
   // container == truthy
-  return makeContainer(getSystem, component)
+  return makeContainer(getSystem, wrapRender(component))
 }

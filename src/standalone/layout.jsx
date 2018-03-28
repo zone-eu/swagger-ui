@@ -1,4 +1,7 @@
-import React, { PropTypes } from "react"
+
+
+import React from "react"
+import PropTypes from "prop-types"
 
 export default class StandaloneLayout extends React.Component {
 
@@ -13,99 +16,54 @@ export default class StandaloneLayout extends React.Component {
   }
 
   render() {
-    let { specSelectors, specActions, getComponent } = this.props
+    let { getComponent, specSelectors, errSelectors } = this.props
 
-    let info = specSelectors.info()
-    let url = specSelectors.url()
-    let basePath = specSelectors.basePath()
-    let host = specSelectors.host()
-    let securityDefinitions = specSelectors.securityDefinitions()
-    let externalDocs = specSelectors.externalDocs()
-    let schemes = specSelectors.schemes()
-
-    let Info = getComponent("info")
-    let Operations = getComponent("operations", true)
-    let Models = getComponent("models", true)
-    let AuthorizeBtn = getComponent("authorizeBtn", true)
     let Container = getComponent("Container")
     let Row = getComponent("Row")
     let Col = getComponent("Col")
     let Errors = getComponent("errors", true)
-    const Schemes = getComponent("schemes")
 
     const Topbar = getComponent("Topbar", true)
+    const BaseLayout = getComponent("BaseLayout", true)
     const OnlineValidatorBadge = getComponent("onlineValidatorBadge", true)
+
     const loadingStatus = specSelectors.loadingStatus()
+    const lastErr = errSelectors.lastError()
+    const lastErrMsg = lastErr ? lastErr.get("message") : ""
 
     return (
 
       <Container className='swagger-ui'>
-        { Topbar ? <Topbar/> : null }
+        { Topbar ? <Topbar /> : null }
         { loadingStatus === "loading" &&
           <div className="info">
-            <h4 className="title">Loading...</h4>
+            <div className="loading-container">
+              <div className="loading"></div>
+            </div>
           </div>
         }
         { loadingStatus === "failed" &&
           <div className="info">
-            <h4 className="title">Failed to load spec.</h4>
+            <div className="loading-container">
+              <h4 className="title">Failed to load API definition.</h4>
+              <Errors/>
+            </div>
           </div>
         }
         { loadingStatus === "failedConfig" &&
           <div className="info" style={{ maxWidth: "880px", marginLeft: "auto", marginRight: "auto", textAlign: "center" }}>
-            <h4 className="title">Failed to load config.</h4>
+            <div className="loading-container">
+              <h4 className="title">Failed to load remote configuration.</h4>
+              <p>{lastErrMsg}</p>
+            </div>
           </div>
         }
-        { loadingStatus === "success" &&
-          <div>
-              <Errors/>
-              <Row className="information-container">
-                <Col mobile={12}>
-                  { info.count() ? (
-                    <Info info={ info } url={ url } host={ host } basePath={ basePath } externalDocs={externalDocs} getComponent={getComponent}/>
-                  ) : null }
-                </Col>
-              </Row>
-              { schemes && schemes.size && securityDefinitions ? (
-              <div className="scheme-container">
-                <Col className="schemes wrapper" mobile={12}>
-                  { schemes && schemes.size ? (
-                    <Schemes schemes={ schemes } specActions={ specActions } />
-                  ) : null }
-                  { securityDefinitions ? (
-                    <AuthorizeBtn />
-                  ) : null }
-                </Col>
-              </div>
-            ) : null }
-
-            { (!schemes || !schemes.size) && securityDefinitions ? (
-              <div className="scheme-container">
-                <Col className="schemes wrapper" mobile={12}>
-                  { securityDefinitions ? (
-                    <AuthorizeBtn />
-                  ) : null }
-                </Col>
-              </div>
-            ) : null }
-
-              <Row>
-                <Col mobile={12} desktop={12} >
-                  <Operations/>
-                </Col>
-              </Row>
-              <Row>
-                <Col mobile={12} desktop={12} >
-                  <Models/>
-                </Col>
-              </Row>
-          </div> }
-
-          <Row>
-            <Col>
-              <OnlineValidatorBadge />
-            </Col>
-          </Row>
+        { !loadingStatus || loadingStatus === "success" && <BaseLayout /> }
+        <Row>
+          <Col>
+            <OnlineValidatorBadge />
+          </Col>
+        </Row>
       </Container>
     )
   }

@@ -7,7 +7,9 @@ module.exports = function({ configs }) {
       buildRequest: Swagger.buildRequest,
       execute: Swagger.execute,
       resolve: Swagger.resolve,
-      serializeRes: Swagger.serializeRes
+      resolveSubtree: Swagger.resolveSubtree,
+      serializeRes: Swagger.serializeRes,
+      opId: Swagger.helpers.opId
     }
   }
 }

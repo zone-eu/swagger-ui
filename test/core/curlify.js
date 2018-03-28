@@ -1,6 +1,7 @@
 import expect from "expect"
 import Im from "immutable"
 import curl from "core/curlify"
+import win from "core/window"
 
 describe("curlify", function() {
 
@@ -21,7 +22,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://example.com -H  \"Accept: application/json\" -H  \"content-type: application/json\" -d {\"id\":0,\"name\":\"doggie\",\"status\":\"available\"}")
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"Accept: application/json\" -H  \"content-type: application/json\" -d {\"id\":0,\"name\":\"doggie\",\"status\":\"available\"}")
     })
 
     it("does not change the case of header in curl", function() {
@@ -35,7 +36,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://example.com -H  \"conTenT Type: application/Moar\"")
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"conTenT Type: application/Moar\"")
     })
 
     it("prints a curl statement with an array of query params", function() {
@@ -46,7 +47,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X GET http://swaggerhub.com/v1/one?name=john|smith")
+        expect(curlified).toEqual("curl -X GET \"http://swaggerhub.com/v1/one?name=john|smith\"")
     })
 
     it("prints a curl statement with an array of query params and auth", function() {
@@ -60,7 +61,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X GET http://swaggerhub.com/v1/one?name=john|smith -H  \"authorization: Basic Zm9vOmJhcg==\"")
+        expect(curlified).toEqual("curl -X GET \"http://swaggerhub.com/v1/one?name=john|smith\" -H  \"authorization: Basic Zm9vOmJhcg==\"")
     })
 
     it("prints a curl statement with html", function() {
@@ -77,7 +78,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X GET http://swaggerhub.com/v1/one?name=john|smith -H  \"accept: application/json\" -d {\"description\":\"<b>Test</b>\"}")
+        expect(curlified).toEqual("curl -X GET \"http://swaggerhub.com/v1/one?name=john|smith\" -H  \"accept: application/json\" -d {\"description\":\"<b>Test</b>\"}")
     })
 
     it("handles post body with html", function() {
@@ -94,7 +95,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://swaggerhub.com/v1/one?name=john|smith -H  \"accept: application/json\" -d {\"description\":\"<b>Test</b>\"}")
+        expect(curlified).toEqual("curl -X POST \"http://swaggerhub.com/v1/one?name=john|smith\" -H  \"accept: application/json\" -d {\"description\":\"<b>Test</b>\"}")
     })
 
     it("handles post body with special chars", function() {
@@ -109,7 +110,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://swaggerhub.com/v1/one?name=john|smith -d {\"description\":\"@prefix nif:<http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#> .@prefix itsrdf: <http://www.w3.org/2005/11/its/rdf#> .\"}")
+        expect(curlified).toEqual("curl -X POST \"http://swaggerhub.com/v1/one?name=john|smith\" -d {\"description\":\"@prefix nif:<http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#> .@prefix itsrdf: <http://www.w3.org/2005/11/its/rdf#> .\"}")
     })
 
     it("handles delete form with parameters", function() {
@@ -123,7 +124,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X DELETE http://example.com -H  \"accept: application/x-www-form-urlencoded\"")
+        expect(curlified).toEqual("curl -X DELETE \"http://example.com\" -H  \"accept: application/x-www-form-urlencoded\"")
     })
 
     it("should print a curl with formData", function() {
@@ -131,12 +132,35 @@ describe("curlify", function() {
             url: "http://example.com",
             method: "POST",
             headers: { "content-type": "multipart/form-data" },
-            body: "id=123&name=Sahar"
+            body: {
+              id: "123",
+              name: "Sahar"
+            }
         }
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://example.com -H  \"content-type: multipart/form-data\" -F id=123 -F name=Sahar")
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"content-type: multipart/form-data\" -F \"id=123\" -F \"name=Sahar\"")
+    })
+
+    it("should print a curl with formData and file", function() {
+        var file = new win.File()
+        file.name = "file.txt"
+        file.type = "text/plain"
+
+        var req = {
+            url: "http://example.com",
+            method: "POST",
+            headers: { "content-type": "multipart/form-data" },
+            body: {
+              id: "123",
+              file
+            }
+        }
+
+        let curlified = curl(Im.fromJS(req))
+
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"content-type: multipart/form-data\" -F \"id=123\" -F \"file=@file.txt;type=text/plain\"")
     })
 
     it("prints a curl post statement from an object", function() {
@@ -153,7 +177,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://example.com -H  \"accept: application/json\" -d {\"id\":10101}")
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"accept: application/json\" -d {\"id\":10101}")
     })
 
     it("prints a curl post statement from a string containing a single quote", function() {
@@ -168,7 +192,7 @@ describe("curlify", function() {
 
         let curlified = curl(Im.fromJS(req))
 
-        expect(curlified).toEqual("curl -X POST http://example.com -H  \"accept: application/json\" -d \"{\\\"id\\\":\\\"foo'bar\\\"}\"")
+        expect(curlified).toEqual("curl -X POST \"http://example.com\" -H  \"accept: application/json\" -d \"{\\\"id\\\":\\\"foo'bar\\\"}\"")
     })
 
 })
